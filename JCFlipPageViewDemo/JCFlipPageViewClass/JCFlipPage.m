@@ -30,7 +30,7 @@
         _tempContentLabel = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 300.0f, 300.0f)];
         _tempContentLabel.numberOfLines = 1;
         _tempContentLabel.text = @"";
-        _tempContentLabel.font = [UIFont systemFontOfSize:300.0f];
+        _tempContentLabel.font = [UIFont systemFontOfSize:200.0f];
         _tempContentLabel.textAlignment = NSTextAlignmentCenter;
         _tempContentLabel.center = CGPointMake(self.bounds.size.width/2.0f, self.bounds.size.height/2.0f);
         [self addSubview:_tempContentLabel];
