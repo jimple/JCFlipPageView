@@ -51,11 +51,24 @@
         page = [[JCFlipPage alloc] initWithFrame:flipPageView.bounds reuseIdentifier:kPageID];
     }else{}
     
-    page.tempContentLabel.text = @"";
-    for (int j = 0; j < 500; j++)
+    if (index%3 == 0)
     {
-        page.tempContentLabel.text = [NSString stringWithFormat:@"%@ %d", page.tempContentLabel.text, index];
+        page.backgroundColor = [UIColor blueColor];
     }
+    else if (index%3 == 1)
+    {
+        page.backgroundColor = [UIColor greenColor];
+    }
+    else if (index%3 == 2)
+    {
+        page.backgroundColor = [UIColor redColor];
+    }else{}
+
+    page.tempContentLabel.text = [NSString stringWithFormat:@"%d", index];
+//    for (int j = 0; j < 500; j++)
+//    {
+//        page.tempContentLabel.text = [NSString stringWithFormat:@"%@ %d", page.tempContentLabel.text, index];
+//    }
     
     return page;
 }
