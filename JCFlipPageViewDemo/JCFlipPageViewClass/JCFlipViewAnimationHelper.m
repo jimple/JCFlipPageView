@@ -21,6 +21,7 @@
 @property (nonatomic, assign) EFlipDirection currFlipDirection;
 @property (nonatomic, assign) CGFloat startFlipAngle;
 @property (nonatomic, assign) CGFloat endFlipAngle;
+@property (nonatomic, assign) CGFloat currentAngle;
 
 @property (nonatomic, strong) CALayer *panelLayer;
 @property (nonatomic, strong) CALayer *bgTopLayer;
@@ -59,6 +60,32 @@
     [self clearLayers];
 }
 
+
+- (void)flipToDirection:(EFlipDirection)direction
+{
+    [self flipToDirection:direction duration:0.3f];
+}
+- (void)flipToDirection:(EFlipDirection)direction duration:(CGFloat)duration
+{
+    [self clearLayers];
+    _canBeginAnimateWithPan = YES;
+    _isAnimationCompleted = YES;
+    _isAnimatingWithPan = NO;
+    _isAnimationInited = NO;
+    
+    _currFlipDirection = direction;
+    [self beginFlipAnimationForDirection:_currFlipDirection];
+    
+    _canBeginAnimateWithPan = NO;
+    [self performSelector:@selector(delayShowFlipAnimation:) withObject:@(duration) afterDelay:0.01f];
+}
+
+- (void)delayShowFlipAnimation:(NSNumber *)duration
+{
+    [self progressFlipAnimation:1.0f duration:duration.floatValue cleanupWhenCompleted:YES];
+}
+
+#pragma mark - Gesture handler
 - (void)panGestureHandler:(UIPanGestureRecognizer *)recognizer
 {
     if (!_canBeginAnimateWithPan)
@@ -157,6 +184,7 @@
     }
 }
 
+#pragma mark -
 - (BOOL)beginFlipAnimationForDirection:(EFlipDirection)direction
 {
     BOOL canFlipPage = NO;
@@ -194,7 +222,6 @@
         _flipFrontSubLayer.contentsGravity = kCAGravityBottom;
         _flipBackSubLayer.contentsGravity = kCAGravityTop;
         
-        
         switch (direction)
         {
             case kEFlipDirectionToPrePage:
@@ -209,7 +236,7 @@
                 
                 [_flipLayer setTransform:CATransform3DIdentity];
                 
-                _startFlipAngle = 0.0f;
+                _currentAngle = _startFlipAngle = 0.0f;
                 _endFlipAngle = -M_PI;
             }
                 break;
@@ -225,7 +252,7 @@
 
                 [_flipLayer setTransform:CATransform3DMakeRotation(-M_PI, 1., 0., 0.)];
                 
-                _startFlipAngle = -M_PI;
+                _currentAngle = _startFlipAngle = -M_PI;
                 _endFlipAngle = 0.0f;
             }
                 break;
@@ -251,12 +278,19 @@
 
 - (void)progressFlipAnimation:(CGFloat)progress cleanupWhenCompleted:(BOOL)isCleanupWhenCompleted
 {
+    [self progressFlipAnimation:progress duration:0.0f cleanupWhenCompleted:isCleanupWhenCompleted];
+}
+
+- (void)progressFlipAnimation:(CGFloat)progress duration:(CGFloat)animationDuration cleanupWhenCompleted:(BOOL)isCleanupWhenCompleted
+{
     CGFloat newAngle = _startFlipAngle + progress * (_endFlipAngle - _startFlipAngle);
-    CGFloat duration = 0.1f;                //  !!!  保持上一次的角度，然后通过剩余多少角度计算持续时间
+    CGFloat duration = (animationDuration > 0.0f) ? animationDuration : (0.2 * fabs((newAngle - _currentAngle) / (_endFlipAngle - _startFlipAngle)));
 	CATransform3D endTransform = CATransform3DIdentity;
 	endTransform.m34 = 1.0f / 2500.0f;
 	endTransform = CATransform3DRotate(endTransform, newAngle, -1.0, 0.0, 0.0);
 	
+    _currentAngle = newAngle;
+    
 	[_flipLayer removeAllAnimations];
     
 	[CATransaction begin];
@@ -275,9 +309,9 @@
             }else{}
         }];
     }else{}
-	
+    
 	_flipLayer.transform = endTransform;
-	
+    
 	[CATransaction commit];
 }
 
@@ -285,6 +319,7 @@
 {
     [self clearLayers];
     
+    _canBeginAnimateWithPan = YES;
     _isAnimationCompleted = YES;
     _isAnimatingWithPan = NO;
     _isAnimationInited = NO;

@@ -23,6 +23,10 @@ typedef NS_ENUM(NSUInteger, EFlipDirection)
 
 - (instancetype)initWithHostView:(UIView *)hostView;
 
+- (void)flipToDirection:(EFlipDirection)direction;
+- (void)flipToDirection:(EFlipDirection)direction duration:(CGFloat)duration;
+
+
 @end
 
 @protocol JCFlipViewAnimationHelperDataSource <NSObject>

@@ -74,17 +74,24 @@ static NSUInteger kReusableArraySize = 5;
 
 - (void)flipToPageAtIndex:(NSUInteger)pageNumber animation:(BOOL)animation
 {
-    if (pageNumber < _numberOfPages)
+    if ((pageNumber < _numberOfPages) && (pageNumber != _currIndex))
     {
-        if (_currPage)
+        if (animation)
         {
-            [_currPage removeFromSuperview];
-            _currPage = nil;
-        }else{}
-        _currPage = [self.dataSource flipPageView:self pageAtIndex:pageNumber];
-        [[self reusableViewsWithReuseIdentifier:_currPage.reuseIdentifier] removeObject:_currPage];
-        [self addSubview:_currPage];
-        _currIndex = pageNumber;
+            [_flipAnimationHelper flipToDirection:((_currIndex > pageNumber) ? kEFlipDirectionToPrePage : kEFlipDirectionToNextPage) duration:0.3f];
+        }
+        else
+        {
+            if (_currPage)
+            {
+                [_currPage removeFromSuperview];
+                _currPage = nil;
+            }else{}
+            _currPage = [self.dataSource flipPageView:self pageAtIndex:pageNumber];
+            [[self reusableViewsWithReuseIdentifier:_currPage.reuseIdentifier] removeObject:_currPage];
+            [self addSubview:_currPage];
+            _currIndex = pageNumber;
+        }
     }
     else
     {

@@ -36,6 +36,7 @@
         [self addSubview:_tempContentLabel];
         self.backgroundColor = [UIColor lightGrayColor];
         
+        
     }
     return self;
 }

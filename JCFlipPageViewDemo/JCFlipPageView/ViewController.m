@@ -29,6 +29,13 @@
     
     _flipPage.dataSource = self;
     [_flipPage reloadData];
+    
+    UIButton *jumpBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    jumpBtn.frame = CGRectMake(10.0f, 100.0f, 50.0f, 30.0f);
+    [jumpBtn setTitle:@"Jump" forState:UIControlStateNormal];
+    [jumpBtn addTarget:self action:@selector(jumpBtn:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:jumpBtn];
+    
 }
 
 - (void)didReceiveMemoryWarning
@@ -51,6 +58,8 @@
         page = [[JCFlipPage alloc] initWithFrame:flipPageView.bounds reuseIdentifier:kPageID];
     }else{}
     
+//    page.alpha = 0.7f;
+    
     if (index%3 == 0)
     {
         page.backgroundColor = [UIColor blueColor];
@@ -63,16 +72,20 @@
     {
         page.backgroundColor = [UIColor redColor];
     }else{}
+    
 
     page.tempContentLabel.text = [NSString stringWithFormat:@"%d", index];
-//    for (int j = 0; j < 500; j++)
-//    {
-//        page.tempContentLabel.text = [NSString stringWithFormat:@"%@ %d", page.tempContentLabel.text, index];
-//    }
     
     return page;
 }
 
+#pragma mark -
+- (void)jumpBtn:(id)sender
+{
+    static NSUInteger pageNum = 0;
+    pageNum++;
+    [_flipPage flipToPageAtIndex:pageNum%20 animation:YES];
+}
 
 
 
