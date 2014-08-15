@@ -83,7 +83,7 @@
 - (void)jumpBtn:(id)sender
 {
     static NSUInteger pageNum = 0;
-    pageNum++;
+    pageNum += 4;
     [_flipPage flipToPageAtIndex:pageNum%20 animation:YES];
 }
 

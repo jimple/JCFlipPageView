@@ -23,8 +23,8 @@ typedef NS_ENUM(NSUInteger, EFlipDirection)
 
 - (instancetype)initWithHostView:(UIView *)hostView;
 
-- (void)flipToDirection:(EFlipDirection)direction;
-- (void)flipToDirection:(EFlipDirection)direction duration:(CGFloat)duration;
+- (void)flipToDirection:(EFlipDirection)direction toPageNum:(NSUInteger)pageNum;
+- (void)flipToDirection:(EFlipDirection)direction toPageNum:(NSUInteger)pageNum duration:(CGFloat)duration;
 
 
 @end
@@ -35,6 +35,8 @@ typedef NS_ENUM(NSUInteger, EFlipDirection)
 - (UIView *)flipViewAnimationHelperGetCurrentView:(JCFlipViewAnimationHelper *)helper;
 - (UIView *)flipViewAnimationHelperGetNextView:(JCFlipViewAnimationHelper *)helper;
 
+- (UIView *)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper getPageByNum:(NSUInteger)pageNum;
+
 @end
 
 @protocol JCFlipViewAnimationHelperDelegate <NSObject>
@@ -43,5 +45,6 @@ typedef NS_ENUM(NSUInteger, EFlipDirection)
 - (void)flipViewAnimationHelperEndAnimation:(JCFlipViewAnimationHelper *)helper;
 
 - (void)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper flipCompletedToDirection:(EFlipDirection)direction;
+- (void)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper flipCompletedToPage:(NSUInteger)pageNum;
 
 @end

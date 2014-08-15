@@ -78,7 +78,7 @@ static NSUInteger kReusableArraySize = 5;
     {
         if (animation)
         {
-            [_flipAnimationHelper flipToDirection:((_currIndex > pageNumber) ? kEFlipDirectionToPrePage : kEFlipDirectionToNextPage) duration:0.3f];
+            [_flipAnimationHelper flipToDirection:((_currIndex > pageNumber) ? kEFlipDirectionToPrePage : kEFlipDirectionToNextPage) toPageNum:pageNumber duration:0.3f];
         }
         else
         {
@@ -138,6 +138,17 @@ static NSUInteger kReusableArraySize = 5;
     return nextView;
 }
 
+- (UIView *)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper getPageByNum:(NSUInteger)pageNum
+{
+    UIView *pageView;
+    if (pageNum < _numberOfPages)
+    {
+        pageView = [self.dataSource flipPageView:self pageAtIndex:pageNum];
+    }else{}
+    
+    return pageView;
+}
+
 #pragma mark - JCFlipViewAnimationHelperDelegate
 - (void)flipViewAnimationHelperBeginAnimation:(JCFlipViewAnimationHelper *)helper
 {
@@ -168,16 +179,12 @@ static NSUInteger kReusableArraySize = 5;
             break;
     }
     
-    if (newIndex != _currIndex)
-    {
-        _currIndex = newIndex;
-        if (_currPage)
-        {
-            [self recoveryPage:_currPage];
-        }else{}
-        _currPage = [self.dataSource flipPageView:self pageAtIndex:newIndex];
-        [self addSubview:_currPage];
-    }else{}
+    [self showPage:newIndex];
+}
+
+- (void)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper flipCompletedToPage:(NSUInteger)pageNum
+{
+    [self showPage:pageNum];
 }
 
 #pragma mark -
@@ -238,7 +245,19 @@ static NSUInteger kReusableArraySize = 5;
     }else{}
 }
 
-
+- (void)showPage:(CGFloat)pageIndex
+{
+    if (pageIndex != _currIndex)
+    {
+        _currIndex = pageIndex;
+        if (_currPage)
+        {
+            [self recoveryPage:_currPage];
+        }else{}
+        _currPage = [self.dataSource flipPageView:self pageAtIndex:pageIndex];
+        [self addSubview:_currPage];
+    }else{}
+}
 
 
 

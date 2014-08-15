@@ -61,11 +61,11 @@
 }
 
 
-- (void)flipToDirection:(EFlipDirection)direction
+- (void)flipToDirection:(EFlipDirection)direction toPageNum:(NSUInteger)pageNum
 {
-    [self flipToDirection:direction duration:0.3f];
+    [self flipToDirection:direction toPageNum:pageNum duration:0.3f];
 }
-- (void)flipToDirection:(EFlipDirection)direction duration:(CGFloat)duration
+- (void)flipToDirection:(EFlipDirection)direction toPageNum:(NSUInteger)pageNum duration:(CGFloat)duration
 {
     [self clearLayers];
     _canBeginAnimateWithPan = YES;
@@ -74,15 +74,17 @@
     _isAnimationInited = NO;
     
     _currFlipDirection = direction;
-    [self beginFlipAnimationForDirection:_currFlipDirection];
+    [self beginFlipAnimationForDirection:_currFlipDirection flipToDestPage:YES destPageNum:pageNum];
     
     _canBeginAnimateWithPan = NO;
-    [self performSelector:@selector(delayShowFlipAnimation:) withObject:@(duration) afterDelay:0.01f];
+    [self performSelector:@selector(delayShowFlipAnimation:) withObject:@[@(duration), @(pageNum)] afterDelay:0.01f];
 }
 
-- (void)delayShowFlipAnimation:(NSNumber *)duration
+- (void)delayShowFlipAnimation:(NSArray *)paramArray
 {
-    [self progressFlipAnimation:1.0f duration:duration.floatValue cleanupWhenCompleted:YES];
+    NSNumber *duration = paramArray[0];
+    NSNumber *pageNum = paramArray[1];
+    [self progressFlipAnimation:1.0f duration:duration.floatValue cleanupWhenCompleted:YES isDelegatePageNum:YES destPageNum:pageNum.unsignedIntegerValue];
 }
 
 #pragma mark - Gesture handler
@@ -187,6 +189,10 @@
 #pragma mark -
 - (BOOL)beginFlipAnimationForDirection:(EFlipDirection)direction
 {
+    return [self beginFlipAnimationForDirection:direction flipToDestPage:NO destPageNum:0];
+}
+- (BOOL)beginFlipAnimationForDirection:(EFlipDirection)direction flipToDestPage:(BOOL)isFlipToDestPage destPageNum:(NSUInteger)destPageNum
+{
     BOOL canFlipPage = NO;
     NSAssert(self.dataSource, @"");
     
@@ -199,13 +205,28 @@
     {
         case kEFlipDirectionToPrePage:
         {
-            preView = [self.dataSource flipViewAnimationHelperGetPreView:self];
+            if (isFlipToDestPage)
+            {
+                preView = [self.dataSource flipViewAnimationHelper:self getPageByNum:destPageNum];
+            }
+            else
+            {
+                preView = [self.dataSource flipViewAnimationHelperGetPreView:self];
+            }
+            
             canFlipPage = (preView != nil);
         }
             break;
         case kEFlipDirectionToNextPage:
         {
-            nextView = [self.dataSource flipViewAnimationHelperGetNextView:self];
+            if (isFlipToDestPage)
+            {
+                nextView = [self.dataSource flipViewAnimationHelper:self getPageByNum:destPageNum];
+            }
+            else
+            {
+                nextView = [self.dataSource flipViewAnimationHelperGetNextView:self];
+            }
             canFlipPage = (nextView != nil);
         }
             break;
@@ -280,8 +301,11 @@
 {
     [self progressFlipAnimation:progress duration:0.0f cleanupWhenCompleted:isCleanupWhenCompleted];
 }
-
 - (void)progressFlipAnimation:(CGFloat)progress duration:(CGFloat)animationDuration cleanupWhenCompleted:(BOOL)isCleanupWhenCompleted
+{
+    [self progressFlipAnimation:progress duration:animationDuration cleanupWhenCompleted:isCleanupWhenCompleted isDelegatePageNum:NO destPageNum:0];
+}
+- (void)progressFlipAnimation:(CGFloat)progress duration:(CGFloat)animationDuration cleanupWhenCompleted:(BOOL)isCleanupWhenCompleted isDelegatePageNum:(BOOL)isDelegatePageNum destPageNum:(NSUInteger)destPageNum
 {
     CGFloat newAngle = _startFlipAngle + progress * (_endFlipAngle - _startFlipAngle);
     CGFloat duration = (animationDuration > 0.0f) ? animationDuration : (0.2 * fabs((newAngle - _currentAngle) / (_endFlipAngle - _startFlipAngle)));
@@ -302,10 +326,19 @@
         [CATransaction setCompletionBlock:^{
             __strong __typeof(weakSelf)strongSelf = weakSelf;
             [strongSelf endFlipAnimation];
-            if ((progress >= 1.0f)
-                && (strongSelf.delegate && [strongSelf.delegate respondsToSelector:@selector(flipViewAnimationHelper:flipCompletedToDirection:)]))
+            if (progress >= 1.0f)
             {
-                [strongSelf.delegate flipViewAnimationHelper:self flipCompletedToDirection:_currFlipDirection];
+                if (isDelegatePageNum)
+                {
+                    if (strongSelf.delegate && [strongSelf.delegate respondsToSelector:@selector(flipViewAnimationHelper:flipCompletedToPage:)])
+                    {
+                        [strongSelf.delegate flipViewAnimationHelper:self flipCompletedToPage:destPageNum];
+                    }else{}
+                }
+                else if (strongSelf.delegate && [strongSelf.delegate respondsToSelector:@selector(flipViewAnimationHelper:flipCompletedToDirection:)])
+                {
+                    [strongSelf.delegate flipViewAnimationHelper:self flipCompletedToDirection:_currFlipDirection];
+                }else{}
             }else{}
         }];
     }else{}
