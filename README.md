@@ -3,7 +3,7 @@ JCFlipPageView
 
 一个类似存折那样翻页的视图。
 
-原来想直接修改 AFKPageFlipper（https://github.com/mtabini/AFKPageFlipper） 实现这个效果，可是觉得里面不太符合要求，所以重写此视图。
+原来想直接修改 AFKPageFlipper（  https://github.com/mtabini/AFKPageFlipper  ） 实现这个效果，可是觉得里面不太符合要求，所以重写此视图。
 感谢AFKPageFlipper提供了代码参考。
 
 说明：
