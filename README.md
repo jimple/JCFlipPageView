@@ -22,8 +22,12 @@ JCFlipPageView
     2、然后再放一个只有半页大小的layer，用来显示翻页的动画。
     3、翻页layer里放两个子layer，分别是上面下一页的下半部分，下面放当前页的上半部分。
 
+
+ - 直接翻到某页时的动画效果已实现。
+ - 添加翻页时页面阴影效果。即将被覆盖的页面越来越暗，即将被展开显示的页面越来越亮。（使用了SBTickerView的layer加阴影mask代码类 SBGradientOverlayLayer  https://github.com/blommegard/SBTickerView  非常感谢）
+ 
 未完成功能：
- - 直接翻到某页时的动画效果未实现。
+
  - 直接翻到多页以后，比如从第一页翻到第十页，多页面翻动的效果未实现。
 
 
