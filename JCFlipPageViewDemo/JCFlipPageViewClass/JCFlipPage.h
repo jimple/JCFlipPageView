@@ -19,4 +19,7 @@ static NSString const* kJCFlipPageDefaultReusableIdentifier = @"kJCFlipPageDefau
 - (id)initWithFrame:(CGRect)frame reuseIdentifier:(NSString *)reuseIdentifier;
 - (void)prepareForReuse;
 
+- (void)setReuseIdentifier:(NSString *)identifier;
+
+
 @end

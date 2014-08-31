@@ -7,8 +7,7 @@
 //
 
 #import "JCFlipViewAnimationHelper.h"
-
-
+#import "SBGradientOverlayLayer.h"      // layer加阴影直接使用SBTickerView的代码 https://github.com/blommegard/SBTickerView
 
 @interface JCFlipViewAnimationHelper ()
 
@@ -24,11 +23,13 @@
 @property (nonatomic, assign) CGFloat currentAngle;
 
 @property (nonatomic, strong) CALayer *panelLayer;
-@property (nonatomic, strong) CALayer *bgTopLayer;
-@property (nonatomic, strong) CALayer *bgBottomLayer;
 @property (nonatomic, strong) CATransformLayer *flipLayer;
-@property (nonatomic, strong) CALayer *flipFrontSubLayer;
-@property (nonatomic, strong) CALayer *flipBackSubLayer;
+
+@property (nonatomic, strong) SBGradientOverlayLayer *bgTopLayer;
+@property (nonatomic, strong) SBGradientOverlayLayer *bgBottomLayer;
+@property (nonatomic, strong) SBGradientOverlayLayer *flipFrontSubLayer;
+@property (nonatomic, strong) SBGradientOverlayLayer *flipBackSubLayer;
+
 
 @end
 
@@ -345,6 +346,24 @@
     
 	_flipLayer.transform = endTransform;
     
+    // 翻页时的阴影变化：即将被覆盖的部分越来越暗，即将展示的部分越来越亮。
+    if (_startFlipAngle == 0.0f)
+    {// 从上向下翻
+        _bgTopLayer.gradientOpacity = 1.0f -progress;
+        _bgBottomLayer.gradientOpacity = progress;
+        
+        _flipFrontSubLayer.gradientOpacity = progress;
+        _flipBackSubLayer.gradientOpacity = 1.0f - progress;
+    }
+    else
+    {// 从下向上翻
+        _bgTopLayer.gradientOpacity = progress;
+        _bgBottomLayer.gradientOpacity = 1.0f - progress;
+        
+        _flipFrontSubLayer.gradientOpacity = 1.0f - progress;
+        _flipBackSubLayer.gradientOpacity = progress;
+    }
+    
 	[CATransaction commit];
 }
 
@@ -411,14 +430,16 @@
     _panelLayer.frame = _hostView.layer.bounds;
     [_hostView.layer addSublayer:_panelLayer];
     
-    _bgTopLayer = [CALayer layer];
+    _bgTopLayer = [[SBGradientOverlayLayer alloc] initWithStyle:SBGradientOverlayLayerTypeFace
+                                                        segment:SBGradientOverlayLayerSegmentTop];
     _bgTopLayer.frame = CGRectMake(0.0f, 0.0f, _panelLayer.bounds.size.width, _panelLayer.bounds.size.height/2.0f);
     _bgTopLayer.doubleSided = NO;
     _bgTopLayer.masksToBounds = YES;
     _bgTopLayer.contentsScale = [[UIScreen mainScreen] scale];
     [_panelLayer addSublayer:_bgTopLayer];
     
-    _bgBottomLayer = [CALayer layer];
+    _bgBottomLayer = [[SBGradientOverlayLayer alloc] initWithStyle:SBGradientOverlayLayerTypeFace
+                                                           segment:SBGradientOverlayLayerSegmentBottom];
     _bgBottomLayer.frame = CGRectMake(0.0f, _panelLayer.bounds.size.height/2.0f, _panelLayer.bounds.size.width, _panelLayer.bounds.size.height/2.0f);
     _bgBottomLayer.doubleSided = NO;
     _bgBottomLayer.masksToBounds = YES;
@@ -432,14 +453,17 @@
     _flipLayer.zPosition = 1000.0f; // Above the other ones
     [_panelLayer addSublayer:_flipLayer];
     
-    _flipFrontSubLayer = [CALayer layer];
+    _flipFrontSubLayer = [[SBGradientOverlayLayer alloc] initWithStyle:SBGradientOverlayLayerTypeFace
+                                                               segment:SBGradientOverlayLayerSegmentTop];
     _flipFrontSubLayer.frame = _flipLayer.bounds;
     _flipFrontSubLayer.doubleSided = NO;
     _flipFrontSubLayer.masksToBounds = YES;
     _flipFrontSubLayer.contentsScale = [[UIScreen mainScreen] scale];
     [_flipLayer addSublayer:_flipFrontSubLayer];
     
-    _flipBackSubLayer = [CALayer layer];
+    _flipBackSubLayer = [[SBGradientOverlayLayer alloc] initWithStyle:SBGradientOverlayLayerTypeFace
+                                                              segment:SBGradientOverlayLayerSegmentBottom];
+    _flipFrontSubLayer.frame = _flipLayer.bounds;
     _flipBackSubLayer.frame = _flipLayer.bounds;
     _flipBackSubLayer.doubleSided = NO;
     _flipBackSubLayer.masksToBounds = YES;

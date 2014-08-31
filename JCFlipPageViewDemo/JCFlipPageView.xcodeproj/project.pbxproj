@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6E3C342919B2C1E3006D3B2B /* SBGradientOverlayLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E3C342819B2C1E3006D3B2B /* SBGradientOverlayLayer.m */; };
 		6EA33FE71993879A0042B7F0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EA33FE61993879A0042B7F0 /* Foundation.framework */; };
 		6EA33FE91993879A0042B7F0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EA33FE81993879A0042B7F0 /* CoreGraphics.framework */; };
 		6EA33FEB1993879A0042B7F0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EA33FEA1993879A0042B7F0 /* UIKit.framework */; };
@@ -37,6 +38,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6E3C342719B2C1E3006D3B2B /* SBGradientOverlayLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBGradientOverlayLayer.h; sourceTree = "<group>"; };
+		6E3C342819B2C1E3006D3B2B /* SBGradientOverlayLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBGradientOverlayLayer.m; sourceTree = "<group>"; };
 		6EA33FE31993879A0042B7F0 /* JCFlipPageView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JCFlipPageView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6EA33FE61993879A0042B7F0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6EA33FE81993879A0042B7F0 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -88,6 +91,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6E3C342619B2C1E3006D3B2B /* SBGradientOverlayLayer */ = {
+			isa = PBXGroup;
+			children = (
+				6E3C342719B2C1E3006D3B2B /* SBGradientOverlayLayer.h */,
+				6E3C342819B2C1E3006D3B2B /* SBGradientOverlayLayer.m */,
+			);
+			path = SBGradientOverlayLayer;
+			sourceTree = "<group>";
+		};
 		6EA33FDA1993879A0042B7F0 = {
 			isa = PBXGroup;
 			children = (
@@ -165,6 +177,7 @@
 		6EAADD8E1994DC2200E35231 /* JCFlipPageViewClass */ = {
 			isa = PBXGroup;
 			children = (
+				6E3C342619B2C1E3006D3B2B /* SBGradientOverlayLayer */,
 				6EAADD8F1994DC2200E35231 /* JCFlipPage.h */,
 				6EAADD901994DC2200E35231 /* JCFlipPage.m */,
 				6EAADD911994DC2200E35231 /* JCFlipPageView.h */,
@@ -274,6 +287,7 @@
 			files = (
 				6EAADD951994DC2200E35231 /* JCFlipPage.m in Sources */,
 				6EAADD961994DC2200E35231 /* JCFlipPageView.m in Sources */,
+				6E3C342919B2C1E3006D3B2B /* SBGradientOverlayLayer.m in Sources */,
 				6EA33FFD1993879A0042B7F0 /* ViewController.m in Sources */,
 				6EA33FF71993879A0042B7F0 /* AppDelegate.m in Sources */,
 				6EA33FF31993879A0042B7F0 /* main.m in Sources */,

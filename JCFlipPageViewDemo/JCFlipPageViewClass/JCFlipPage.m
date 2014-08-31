@@ -27,6 +27,7 @@
         // Initialization code
         _reuseIdentifier = reuseIdentifier;
         
+#warning ! a temp label
         _tempContentLabel = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 300.0f, 300.0f)];
         _tempContentLabel.numberOfLines = 1;
         _tempContentLabel.text = @"";
@@ -36,9 +37,15 @@
         [self addSubview:_tempContentLabel];
         self.backgroundColor = [UIColor lightGrayColor];
         
+        _tempContentLabel.backgroundColor = [UIColor whiteColor];
         
     }
     return self;
+}
+
+- (void)setReuseIdentifier:(NSString *)identifier
+{
+    _reuseIdentifier = identifier;
 }
 
 /*

@@ -73,7 +73,6 @@
         page.backgroundColor = [UIColor redColor];
     }else{}
     
-
     page.tempContentLabel.text = [NSString stringWithFormat:@"%d", index];
     
     return page;
@@ -83,11 +82,22 @@
 - (void)jumpBtn:(id)sender
 {
     static NSUInteger pageNum = 0;
-    pageNum += 4;
-    [_flipPage flipToPageAtIndex:pageNum%20 animation:YES];
+//    pageNum += 4;
+//    [_flipPage flipToPageAtIndex:pageNum%20 animation:YES];
+    
+    
+    
+    [self performSelector:@selector(showPage:) withObject:@(pageNum%20) afterDelay:0.1f];
+    [self performSelector:@selector(showPage:) withObject:@(3) afterDelay:0.2f];
+    [self performSelector:@selector(showPage:) withObject:@(4) afterDelay:0.4f];
+    [self performSelector:@selector(showPage:) withObject:@(5) afterDelay:0.6f];
+    
 }
 
-
+- (void)showPage:(NSNumber *)pageNum
+{
+    [_flipPage flipToPageAtIndex:pageNum.integerValue animation:YES];
+}
 
 
 
