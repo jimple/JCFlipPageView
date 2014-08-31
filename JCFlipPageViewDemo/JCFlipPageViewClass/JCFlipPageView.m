@@ -10,7 +10,7 @@
 #import "JCFlipViewAnimationHelper.h"
 #import "JCFlipPage.h"
 
-static NSUInteger kReusableArraySize = 5;
+static NSUInteger kReusableArraySize = 20;
 
 
 @interface JCFlipPageView ()
@@ -44,6 +44,13 @@ static NSUInteger kReusableArraySize = 5;
     return self;
 }
 
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    
+    [self initalizeView];
+}
+
 - (void)dealloc
 {
     if (_currPage)
@@ -68,17 +75,26 @@ static NSUInteger kReusableArraySize = 5;
     _numberOfPages = [self pagesCount];
     if (_numberOfPages > 0)
     {
-        [self flipToPageAtIndex:0 animation:NO];
+        [self flipToPageAtIndex:0 animation:NO forceFlip:YES durantion:0.3f];
     }else{}
 }
 
+- (void)flipToPageAtIndex:(NSUInteger)pageNumber animation:(BOOL)animation duration:(CGFloat)duration
+{
+    [self flipToPageAtIndex:pageNumber animation:animation forceFlip:YES durantion:duration];
+}
 - (void)flipToPageAtIndex:(NSUInteger)pageNumber animation:(BOOL)animation
 {
-    if ((pageNumber < _numberOfPages) && (pageNumber != _currIndex))
+    [self flipToPageAtIndex:pageNumber animation:animation forceFlip:NO durantion:0.3f];
+}
+- (void)flipToPageAtIndex:(NSUInteger)pageNumber animation:(BOOL)animation forceFlip:(BOOL)forceFlip durantion:(CGFloat)duration
+{
+    if (forceFlip
+        || ((pageNumber < _numberOfPages) && (pageNumber != _currIndex)))
     {
         if (animation)
         {
-            [_flipAnimationHelper flipToDirection:((_currIndex > pageNumber) ? kEFlipDirectionToPrePage : kEFlipDirectionToNextPage) toPageNum:pageNumber duration:0.3f];
+            [_flipAnimationHelper flipToDirection:((_currIndex > pageNumber) ? kEFlipDirectionToPrePage : kEFlipDirectionToNextPage) toPageNum:pageNumber duration:duration];
         }
         else
         {
@@ -92,11 +108,7 @@ static NSUInteger kReusableArraySize = 5;
             [self addSubview:_currPage];
             _currIndex = pageNumber;
         }
-    }
-    else
-    {
-        // do nothing
-    }
+    }else{}
 }
 
 - (JCFlipPage *)dequeueReusablePageWithReuseIdentifier:(NSString *)reuseIdentifier

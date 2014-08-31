@@ -18,6 +18,7 @@
 - (void)reloadData;
 
 - (void)flipToPageAtIndex:(NSUInteger)pageNumber animation:(BOOL)animation;
+- (void)flipToPageAtIndex:(NSUInteger)pageNumber animation:(BOOL)animation duration:(CGFloat)duration;
 
 - (JCFlipPage *)dequeueReusablePageWithReuseIdentifier:(NSString *)reuseIdentifier;
 
