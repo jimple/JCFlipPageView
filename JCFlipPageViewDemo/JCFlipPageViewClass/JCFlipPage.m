@@ -37,7 +37,7 @@
         [self addSubview:_tempContentLabel];
         self.backgroundColor = [UIColor lightGrayColor];
         
-        _tempContentLabel.backgroundColor = [UIColor whiteColor];
+        _tempContentLabel.backgroundColor = [UIColor clearColor];
         
     }
     return self;

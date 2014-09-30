@@ -29,12 +29,7 @@
     
     _flipPage.dataSource = self;
     [_flipPage reloadData];
-    
-    UIButton *jumpBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    jumpBtn.frame = CGRectMake(10.0f, 100.0f, 50.0f, 30.0f);
-    [jumpBtn setTitle:@"Jump" forState:UIControlStateNormal];
-    [jumpBtn addTarget:self action:@selector(jumpBtn:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:jumpBtn];
+
     
 }
 
@@ -57,9 +52,7 @@
     {
         page = [[JCFlipPage alloc] initWithFrame:flipPageView.bounds reuseIdentifier:kPageID];
     }else{}
-    
-//    page.alpha = 0.7f;
-    
+
     if (index%3 == 0)
     {
         page.backgroundColor = [UIColor blueColor];
@@ -79,20 +72,6 @@
 }
 
 #pragma mark -
-- (void)jumpBtn:(id)sender
-{
-    static NSUInteger pageNum = 0;
-//    pageNum += 4;
-//    [_flipPage flipToPageAtIndex:pageNum%20 animation:YES];
-    
-    
-    
-    [self performSelector:@selector(showPage:) withObject:@(pageNum%20) afterDelay:0.1f];
-    [self performSelector:@selector(showPage:) withObject:@(3) afterDelay:0.2f];
-    [self performSelector:@selector(showPage:) withObject:@(4) afterDelay:0.4f];
-    [self performSelector:@selector(showPage:) withObject:@(5) afterDelay:0.6f];
-    
-}
 
 - (void)showPage:(NSNumber *)pageNum
 {

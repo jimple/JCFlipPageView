@@ -26,6 +26,10 @@ static NSUInteger kReusableArraySize = 20;
 @property (nonatomic, assign) NSUInteger currIndex;
 
 @property (nonatomic, strong) NSMutableDictionary *reusablePagesDic;
+@property (nonatomic, strong) NSMutableDictionary *pageIndexStr2SnapshotImgDic;
+
+@property (nonatomic, strong) UIView *backgroundPageView;
+
 
 @end
 
@@ -60,18 +64,24 @@ static NSUInteger kReusableArraySize = 20;
 }
 
 /*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect
+ // Only override drawRect: if you perform custom drawing.
+ // An empty implementation adversely affects performance during animation.
+ - (void)drawRect:(CGRect)rect
+ {
+ // Drawing code
+ }
+ */
+
+- (NSInteger)currPageIndex
 {
-    // Drawing code
+    return _currIndex;
 }
-*/
 
 - (void)reloadData
 {
     [self cleanupPages];
     
+    _currIndex = -1;
     _numberOfPages = [self pagesCount];
     if (_numberOfPages > 0)
     {
@@ -94,21 +104,48 @@ static NSUInteger kReusableArraySize = 20;
     {
         if (animation)
         {
-            [_flipAnimationHelper flipToDirection:((_currIndex > pageNumber) ? kEFlipDirectionToPrePage : kEFlipDirectionToNextPage) toPageNum:pageNumber duration:duration];
+            BOOL canDoFilpAnimation = NO;
+            if (pageNumber == _currIndex)
+            {// 目标页面与当前页面是同一页时无法使用动画，所以需强制把页面翻到另一页，然后才能开始动画
+                if (_currIndex >= 1)
+                {
+                    [self filpToIndexWithoutAnimation:(_currIndex-1)];
+                    canDoFilpAnimation = YES;
+                }
+                else if ((_currIndex + 1) < _numberOfPages)
+                {
+                    [self filpToIndexWithoutAnimation:(_currIndex+1)];
+                    canDoFilpAnimation = YES;
+                }
+                else
+                {
+                    canDoFilpAnimation = NO;
+                }
+            }else{}
+            
+            if (canDoFilpAnimation)
+            {
+                [_flipAnimationHelper flipToDirection:((_currIndex > pageNumber) ? kEFlipDirectionToPrePage : kEFlipDirectionToNextPage) toPageNum:pageNumber duration:duration];
+            }else{}
         }
         else
         {
-            if (_currPage)
-            {
-                [_currPage removeFromSuperview];
-                _currPage = nil;
-            }else{}
-            _currPage = [self.dataSource flipPageView:self pageAtIndex:pageNumber];
-            [[self reusableViewsWithReuseIdentifier:_currPage.reuseIdentifier] removeObject:_currPage];
-            [self addSubview:_currPage];
-            _currIndex = pageNumber;
+            [self filpToIndexWithoutAnimation:pageNumber];
         }
     }else{}
+}
+
+- (void)filpToIndexWithoutAnimation:(NSUInteger)destPageNumber
+{
+    if (_currPage)
+    {
+        [self recoveryPage:_currPage];
+    }else{}
+    _currPage = nil;
+    _currPage = [self.dataSource flipPageView:self pageAtIndex:destPageNumber];
+    [[self reusableViewsWithReuseIdentifier:_currPage.reuseIdentifier] removeObject:_currPage];
+    [self addSubview:_currPage];
+    _currIndex = destPageNumber;
 }
 
 - (JCFlipPage *)dequeueReusablePageWithReuseIdentifier:(NSString *)reuseIdentifier
@@ -120,6 +157,30 @@ static NSUInteger kReusableArraySize = 20;
     }else{}
     
     return page;
+}
+
+- (void)initializeBackgroundPageView:(UIView *)bgView
+{
+    _backgroundPageView = bgView;
+    if (_flipAnimationHelper)
+    {
+        [_flipAnimationHelper resetBackgroundPageView:_backgroundPageView];
+    }else{}
+}
+- (void)initializeBackgroundPageViewWithBgColor:(UIColor *)bgColor
+{
+    NSAssert(bgColor, @"");
+    if (!bgColor)
+    {
+        bgColor = [UIColor clearColor];
+    }else{}
+    
+    _backgroundPageView = [[UIView alloc] initWithFrame:self.bounds];
+    _backgroundPageView.backgroundColor = bgColor;
+    if (_flipAnimationHelper)
+    {
+        [_flipAnimationHelper resetBackgroundPageView:_backgroundPageView];
+    }else{}
 }
 
 #pragma mark - JCFlipViewAnimationHelperDataSource
@@ -150,6 +211,11 @@ static NSUInteger kReusableArraySize = 20;
     return nextView;
 }
 
+- (NSInteger)flipViewAnimationHelperGetCurrentPageIndex:(JCFlipViewAnimationHelper *)helper
+{
+    return _currIndex;
+}
+
 - (UIView *)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper getPageByNum:(NSUInteger)pageNum
 {
     UIView *pageView;
@@ -159,6 +225,11 @@ static NSUInteger kReusableArraySize = 20;
     }else{}
     
     return pageView;
+}
+
+- (UIImage *)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper getSnapshotForPageIndex:(NSInteger)index
+{
+    return _pageIndexStr2SnapshotImgDic[@(index).stringValue];
 }
 
 #pragma mark - JCFlipViewAnimationHelperDelegate
@@ -179,12 +250,26 @@ static NSUInteger kReusableArraySize = 20;
     {
         case kEFlipDirectionToPrePage:
         {
-            newIndex = _currIndex - 1;
+            if (_currIndex >= 1)
+            {
+                newIndex = _currIndex - 1;
+            }
+            else
+            {
+                newIndex = 0;
+            }
         }
             break;
         case kEFlipDirectionToNextPage:
         {
-            newIndex = _currIndex + 1;
+            if (_currIndex <= (_numberOfPages - 2))
+            {
+                newIndex = _currIndex + 1;
+            }
+            else
+            {
+                newIndex = _numberOfPages - 1;
+            }
         }
             break;
         default:
@@ -199,10 +284,19 @@ static NSUInteger kReusableArraySize = 20;
     [self showPage:pageNum];
 }
 
+- (void)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper pageSnapshot:(UIImage *)snapshot forPageIndex:(NSInteger)index
+{
+    if (self.cachePageSnapshotImage && snapshot)
+    {
+        _pageIndexStr2SnapshotImgDic[@(index).stringValue] = snapshot;
+    }else{}
+}
+
 #pragma mark -
 - (void)initalizeView
 {
-    _flipAnimationHelper = [[JCFlipViewAnimationHelper alloc] initWithHostView:self];
+    _pageIndexStr2SnapshotImgDic = [[NSMutableDictionary alloc] init];
+    _flipAnimationHelper = [[JCFlipViewAnimationHelper alloc] initWithHostView:self backgroundPageView:_backgroundPageView];
     _flipAnimationHelper.dataSource = self;
     _flipAnimationHelper.delegate = self;
     _currIndex = -1;
@@ -216,6 +310,8 @@ static NSUInteger kReusableArraySize = 20;
     {
         [self recoveryPage:_currPage];
     }else{}
+    _currPage = nil;
+    _pageIndexStr2SnapshotImgDic = [[NSMutableDictionary alloc] init];
 }
 
 - (NSUInteger)pagesCount
@@ -234,7 +330,7 @@ static NSUInteger kReusableArraySize = 20;
         _reusablePagesDic = [[NSMutableDictionary alloc] init];
     }else{}
     NSString *reuseID = reuseIdentifier ? reuseIdentifier : kJCFlipPageDefaultReusableIdentifier;
-
+    
     NSMutableSet *reusablePages = [_reusablePagesDic objectForKey:reuseID];
     if (!reusablePages)
     {
@@ -270,7 +366,6 @@ static NSUInteger kReusableArraySize = 20;
         [self addSubview:_currPage];
     }else{}
 }
-
 
 
 

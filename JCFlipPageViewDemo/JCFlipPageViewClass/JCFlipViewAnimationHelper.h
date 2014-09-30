@@ -21,7 +21,8 @@ typedef NS_ENUM(NSUInteger, EFlipDirection)
 @property (nonatomic, weak) id<JCFlipViewAnimationHelperDataSource> dataSource;
 @property (nonatomic, weak) id<JCFlipViewAnimationHelperDelegate> delegate;
 
-- (instancetype)initWithHostView:(UIView *)hostView;
+- (instancetype)initWithHostView:(UIView *)hostView backgroundPageView:(UIView *)bgPageView;
+- (void)resetBackgroundPageView:(UIView *)bgView;
 
 - (void)flipToDirection:(EFlipDirection)direction toPageNum:(NSUInteger)pageNum;
 - (void)flipToDirection:(EFlipDirection)direction toPageNum:(NSUInteger)pageNum duration:(CGFloat)duration;
@@ -37,6 +38,11 @@ typedef NS_ENUM(NSUInteger, EFlipDirection)
 
 - (UIView *)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper getPageByNum:(NSUInteger)pageNum;
 
+- (NSInteger)flipViewAnimationHelperGetCurrentPageIndex:(JCFlipViewAnimationHelper *)helper;
+- (UIImage *)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper getSnapshotForPageIndex:(NSInteger)index;
+
+
+
 @end
 
 @protocol JCFlipViewAnimationHelperDelegate <NSObject>
@@ -46,5 +52,7 @@ typedef NS_ENUM(NSUInteger, EFlipDirection)
 
 - (void)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper flipCompletedToDirection:(EFlipDirection)direction;
 - (void)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper flipCompletedToPage:(NSUInteger)pageNum;
+
+- (void)flipViewAnimationHelper:(JCFlipViewAnimationHelper *)helper pageSnapshot:(UIImage *)snapshot forPageIndex:(NSInteger)index;
 
 @end

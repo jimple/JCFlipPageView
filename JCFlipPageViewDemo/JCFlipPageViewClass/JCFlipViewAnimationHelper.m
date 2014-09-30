@@ -9,6 +9,12 @@
 #import "JCFlipViewAnimationHelper.h"
 #import "SBGradientOverlayLayer.h"      // layer加阴影直接使用SBTickerView的代码 https://github.com/blommegard/SBTickerView
 
+
+#define kDefaultBgPageColor             [UIColor darkGrayColor]
+#define kProgressAnimationDuration      0.5f
+#define kSwipeReduceRate                0.8f
+#define kFlipToBgMaxProgress            0.3f
+
 @interface JCFlipViewAnimationHelper ()
 
 @property (nonatomic, weak) UIView *hostView;
@@ -30,6 +36,9 @@
 @property (nonatomic, strong) SBGradientOverlayLayer *flipFrontSubLayer;
 @property (nonatomic, strong) SBGradientOverlayLayer *flipBackSubLayer;
 
+@property (nonatomic, strong) UIImage *backgroundPageSnapshot;
+@property (nonatomic, strong) UIView *bgPageView;
+@property (nonatomic, assign) BOOL isFilpToBg;
 
 @end
 
@@ -37,7 +46,7 @@
 @synthesize dataSource;
 @synthesize delegate;
 
-- (instancetype)initWithHostView:(UIView *)hostView
+- (instancetype)initWithHostView:(UIView *)hostView backgroundPageView:(UIView *)bgPageView
 {
     self = [super init];
     if (self)
@@ -51,6 +60,9 @@
         _isAnimationCompleted = YES;
         _isAnimatingWithPan = NO;
         _isAnimationInited = NO;
+        _isFilpToBg = NO;
+        
+        [self resetBackgroundPageView:bgPageView];
     }else{}
     return self;
 }
@@ -61,6 +73,11 @@
     [self clearLayers];
 }
 
+- (void)resetBackgroundPageView:(UIView *)bgView
+{
+    _bgPageView = bgView;
+    [self initializeBgPageSnapshot];
+}
 
 - (void)flipToDirection:(EFlipDirection)direction toPageNum:(NSUInteger)pageNum
 {
@@ -76,8 +93,9 @@
     
     _currFlipDirection = direction;
     [self beginFlipAnimationForDirection:_currFlipDirection flipToDestPage:YES destPageNum:pageNum];
-    
+
     _canBeginAnimateWithPan = NO;
+    _isAnimationCompleted = NO;
     [self performSelector:@selector(delayShowFlipAnimation:) withObject:@[@(duration), @(pageNum)] afterDelay:0.01f];
 }
 
@@ -122,23 +140,33 @@
                 
                 if (canProgressAnimation)
                 {
-                    CGFloat progress = translationY / _hostView.bounds.size.height;
+                    CGFloat progress = translationY / (_hostView.bounds.size.height * kSwipeReduceRate);    // height * 小于1的数，减小手指滑动的行程
                     switch (_currFlipDirection)
                     {
                         case kEFlipDirectionToPrePage:
                         {
                             progress = MAX(progress, 0);
+                            progress = MIN(progress, 1.0f);
                         }
                             break;
                         case kEFlipDirectionToNextPage:
                         {
                             progress = MIN(progress, 0);
+                            progress = MAX(progress, -1.0f);
                         }
                             break;
                         default:
                             break;
                     }
                     progress = fabsf(progress);
+                    
+                    // 从第一页向前翻或者最后一页向后翻，都认为是要翻到背景页。
+                    // 只能翻起一部分，以表示不能再继续翻页了。
+                    if (_isFilpToBg)
+                    {
+                        progress = progress * kFlipToBgMaxProgress;
+                    }else{}
+                    
                     [self progressFlipAnimation:progress];
                 }
                 else
@@ -168,20 +196,27 @@
         {
             if (_isAnimatingWithPan)
             {
-                if (fabs((translationY + [recognizer velocityInView:_hostView].y / 4) / _hostView.bounds.size.height) > 0.5f)
+                if (_isFilpToBg)
                 {
-                    [self progressFlipAnimation:1.0f cleanupWhenCompleted:YES];
+                    [self progressFlipAnimation:0.0f cleanupWhenCompleted:YES];
                 }
                 else
                 {
-                    [self progressFlipAnimation:0.0f cleanupWhenCompleted:YES];
+                    // 翻页超过一半则继续完成翻页，否则翻回原来页面
+                    if (fabs((translationY + [recognizer velocityInView:_hostView].y / 4) / _hostView.bounds.size.height) > 0.5f)
+                    {
+                        [self progressFlipAnimation:1.0f cleanupWhenCompleted:YES];
+                    }
+                    else
+                    {
+                        [self progressFlipAnimation:0.0f cleanupWhenCompleted:YES];
+                    }
                 }
             }else{}
         }
             break;
         default:
         {
-            
         }
             break;
     }
@@ -197,9 +232,13 @@
     BOOL canFlipPage = NO;
     NSAssert(self.dataSource, @"");
     
+    // 获取当前页和目标页的视图、页码
     UIView *currView;
     UIView *preView;
     UIView *nextView;
+    NSInteger currViewIndex = [self.dataSource flipViewAnimationHelperGetCurrentPageIndex:self];
+    NSInteger preViewIndex = currViewIndex - 1;
+    NSInteger nextViewIndex = currViewIndex + 1;
     
     currView = [self.dataSource flipViewAnimationHelperGetCurrentView:self];
     switch (direction)
@@ -209,10 +248,15 @@
             if (isFlipToDestPage)
             {
                 preView = [self.dataSource flipViewAnimationHelper:self getPageByNum:destPageNum];
+                preViewIndex = destPageNum;
             }
             else
             {
                 preView = [self.dataSource flipViewAnimationHelperGetPreView:self];
+                if (preView)
+                {
+                    preViewIndex = currViewIndex - 1;
+                }else{}
             }
             
             canFlipPage = (preView != nil);
@@ -223,10 +267,15 @@
             if (isFlipToDestPage)
             {
                 nextView = [self.dataSource flipViewAnimationHelper:self getPageByNum:destPageNum];
+                nextViewIndex = destPageNum;
             }
             else
             {
                 nextView = [self.dataSource flipViewAnimationHelperGetNextView:self];
+                if (nextView)
+                {
+                    nextViewIndex = currViewIndex + 1;
+                }else{}
             }
             canFlipPage = (nextView != nil);
         }
@@ -235,6 +284,30 @@
             break;
     }
     
+    // 从第一页向前翻或者最后一页向后翻，都认为是要翻到背景页。
+    _isFilpToBg = NO;
+    if (!canFlipPage && !isFlipToDestPage)
+    {
+        if (direction == kEFlipDirectionToPrePage)
+        {
+            preView = _bgPageView;
+            canFlipPage = YES;
+            _isFilpToBg = YES;
+        }
+        else if (direction == kEFlipDirectionToNextPage)
+        {
+            nextView = _bgPageView;
+            canFlipPage = YES;
+            _isFilpToBg = YES;
+        }else{}
+    }else{}
+    
+    if ((currViewIndex < 0) || !currView)
+    {
+        canFlipPage = NO;
+    }else{}
+    
+    // 初始化翻页需要使用的页面截图和layer
     if (canFlipPage && currView)
     {
         [self rebulidLayers];
@@ -248,8 +321,27 @@
         {
             case kEFlipDirectionToPrePage:
             {
-                UIImage *preImg = [self snapshotFromView:preView];
+                UIImage *preImg;
+                if (preView == _bgPageView)
+                {
+                    preImg = _backgroundPageSnapshot;
+                }
+                else
+                {
+                    preImg = [self.dataSource flipViewAnimationHelper:self getSnapshotForPageIndex:preViewIndex];
+                    if (!preImg)
+                    {
+                        preImg = [self snapshotFromView:preView];
+                        [self.delegate flipViewAnimationHelper:self pageSnapshot:preImg forPageIndex:preViewIndex];
+                    }else{}
+                }
+                
                 UIImage *currImg = [self snapshotFromView:currView];
+                if (!currImg)
+                {
+                    currImg = [self snapshotFromView:currView];
+                    [self.delegate flipViewAnimationHelper:self pageSnapshot:currImg forPageIndex:currViewIndex];
+                }else{}
                 
                 [_bgTopLayer setContents:(__bridge id)preImg.CGImage];
                 [_bgBottomLayer setContents:(__bridge id)currImg.CGImage];
@@ -264,8 +356,27 @@
                 break;
             case kEFlipDirectionToNextPage:
             {
-                UIImage *nextImg = [self snapshotFromView:nextView];
+                UIImage *nextImg;
+                if (nextView == _bgPageView)
+                {
+                    nextImg = _backgroundPageSnapshot;
+                }
+                else
+                {
+                    nextImg = [self.dataSource flipViewAnimationHelper:self getSnapshotForPageIndex:nextViewIndex];
+                    if (!nextImg)
+                    {
+                        nextImg = [self snapshotFromView:nextView];
+                        [self.delegate flipViewAnimationHelper:self pageSnapshot:nextImg forPageIndex:nextViewIndex];
+                    }else{}
+                }
+                
                 UIImage *currImg = [self snapshotFromView:currView];
+                if (!currImg)
+                {
+                    currImg = [self snapshotFromView:currView];
+                    [self.delegate flipViewAnimationHelper:self pageSnapshot:currImg forPageIndex:currViewIndex];
+                }else{}
                 
                 [_bgTopLayer setContents:(__bridge id)currImg.CGImage];
                 [_bgBottomLayer setContents:(__bridge id)nextImg.CGImage];
@@ -297,7 +408,6 @@
 {
     [self progressFlipAnimation:progress cleanupWhenCompleted:NO];
 }
-
 - (void)progressFlipAnimation:(CGFloat)progress cleanupWhenCompleted:(BOOL)isCleanupWhenCompleted
 {
     [self progressFlipAnimation:progress duration:0.0f cleanupWhenCompleted:isCleanupWhenCompleted];
@@ -309,11 +419,12 @@
 - (void)progressFlipAnimation:(CGFloat)progress duration:(CGFloat)animationDuration cleanupWhenCompleted:(BOOL)isCleanupWhenCompleted isDelegatePageNum:(BOOL)isDelegatePageNum destPageNum:(NSUInteger)destPageNum
 {
     CGFloat newAngle = _startFlipAngle + progress * (_endFlipAngle - _startFlipAngle);
-    CGFloat duration = (animationDuration > 0.0f) ? animationDuration : (0.2 * fabs((newAngle - _currentAngle) / (_endFlipAngle - _startFlipAngle)));
 	CATransform3D endTransform = CATransform3DIdentity;
 	endTransform.m34 = 1.0f / 2500.0f;
 	endTransform = CATransform3DRotate(endTransform, newAngle, -1.0, 0.0, 0.0);
 	
+    CGFloat duration = (animationDuration > 0.0f) ? animationDuration : (kProgressAnimationDuration * fabs((newAngle - _currentAngle) / (_endFlipAngle - _startFlipAngle)));
+    
     _currentAngle = newAngle;
     
 	[_flipLayer removeAllAnimations];
@@ -326,7 +437,9 @@
         __weak __typeof(self)weakSelf = self;
         [CATransaction setCompletionBlock:^{
             __strong __typeof(weakSelf)strongSelf = weakSelf;
+            
             [strongSelf endFlipAnimation];
+            
             if (progress >= 1.0f)
             {
                 if (isDelegatePageNum)
@@ -375,6 +488,7 @@
     _isAnimationCompleted = YES;
     _isAnimatingWithPan = NO;
     _isAnimationInited = NO;
+    _isFilpToBg = NO;
     
     if (delegate && [delegate respondsToSelector:@selector(flipViewAnimationHelperEndAnimation:)])
     {
@@ -484,6 +598,15 @@
 	return image;
 }
 
+- (void)initializeBgPageSnapshot
+{
+    if (!_bgPageView)
+    {
+        _bgPageView = [[UIView alloc] initWithFrame:_hostView.bounds];
+        _bgPageView.backgroundColor = kDefaultBgPageColor;
+    }else{}
+    _backgroundPageSnapshot = [self snapshotFromView:_bgPageView];
+}
 
 
 

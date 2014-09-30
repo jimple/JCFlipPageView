@@ -75,7 +75,7 @@
                                           [NSNumber numberWithFloat:1.],
                                           nil]];
 			
-			_maximumOpacity = .75;
+			_maximumOpacity = .65;
 		} else {
 			[_gradientLayer setColors:[NSArray arrayWithObjects:
 									 (__bridge id)[UIColor colorWithWhite:0. alpha:0.].CGColor,
@@ -90,7 +90,7 @@
 										nil]];
 			
 
-			_maximumOpacity = 1.;
+			_maximumOpacity = 0.95;
 		}
         
         if (segment == SBGradientOverlayLayerSegmentTop) {
@@ -138,7 +138,19 @@
 
 
 - (void)setGradientOpacity:(CGFloat)opacity {
-	[_gradientLayer setOpacity:(opacity * (_maximumOpacity - _minimumOpacity) + _minimumOpacity)];
+    
+    // 翻页超过中线后才开始阴影变化。
+    if (opacity > 0.5f)
+    {
+        opacity -= 0.5f;
+        opacity *= 2.5f;
+    }
+    else
+    {
+        opacity = 0.0f;
+    }
+    
+    [_gradientLayer setOpacity:(opacity * (_maximumOpacity - _minimumOpacity) + _minimumOpacity)];
 }
 
 - (void)setContents:(id)contents {

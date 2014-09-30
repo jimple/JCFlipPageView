@@ -14,13 +14,18 @@
 
 @property (nonatomic, weak) id<JCFlipPageViewDataSource> dataSource;
 
+@property (nonatomic, assign) BOOL cachePageSnapshotImage;  // 是否缓存页面截图
 
+- (NSInteger)currPageIndex;
 - (void)reloadData;
 
 - (void)flipToPageAtIndex:(NSUInteger)pageNumber animation:(BOOL)animation;
 - (void)flipToPageAtIndex:(NSUInteger)pageNumber animation:(BOOL)animation duration:(CGFloat)duration;
 
 - (JCFlipPage *)dequeueReusablePageWithReuseIdentifier:(NSString *)reuseIdentifier;
+
+- (void)initializeBackgroundPageView:(UIView *)bgView;
+- (void)initializeBackgroundPageViewWithBgColor:(UIColor *)bgColor;
 
 
 @end
